@@ -7,13 +7,21 @@ module.exports = function (connectionURL) {
 
 	var Model = function () {};
 
-	Model.extend = function(keys) {
-		if (!(Array.isArray(keys))) {
-			throw new Error('keys argument must be an array!');
+	Model.extend = function(options) {
+		if (typeof options !== 'object' || Array.isArray(options) || options === null ) {
+			throw new Error('options argument must be an object');
+		}
+		if (typeof options.type !== 'string' || options.type.length === 0) {
+			throw new Error('options.type must be defined');
+		}
+
+		if (!(Array.isArray(options.properties))) {
+			throw new Error('options.type must be an array');
 		}
 		var func = function (params) {
-			for (var i = 0; i < keys.length; i++) {
-				var key = keys[i];
+			this.type = options.type;
+			for (var i = 0; i < options.properties.length; i++) {
+				var key = options.properties[i];
 				this[key] = undefined;
 			}
 			for (var p in params) {
@@ -42,6 +50,8 @@ module.exports = function (connectionURL) {
 				});
 			});
 		};
+
+		func.prototype.delete = function  () {};
 		return func;
 	};
 
