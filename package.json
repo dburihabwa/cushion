@@ -1,0 +1,16 @@
+{
+  "name": "sofa",
+  "version": "0.0.1",
+  "description": "A light promise based couchdb ORM built on top of nano and q.",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha --recursive test/"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": { 
+  },
+  "devDependencies": {
+    "mocha": "^2.2.1"
+  }
+}
