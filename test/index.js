@@ -1,6 +1,7 @@
 var assert = require('assert');
 require('blanket')();
 var path = require('path');
+var nano = require('nano');
 
 var index = require(path.join(__dirname, '../index.js'))('http://127.0.0.1:5984/test');
 var Model = index.Model;
@@ -152,5 +153,52 @@ describe('extendedModel.save()', function () {
                 done();
             });
         }).catch(done);
+    });
+});
+
+describe('model.delete()', function() {
+    'use strict';
+    it('should reject an error if the model does not exist in the database', function (done) {        
+        var options = {
+            'type': 'user',
+            'properties' : ['name', 'email']
+        };
+        var User = Model.extend(options);
+        var user = new User({'name': 'sam', 'email': 'sam@email.example'});
+        user.delete().then(function () {
+            assert.fail('An error should have been rejected!');
+            done();
+        }, function (error) {
+            assert.ok(error instanceof Error);
+            done();
+        }).catch(done);
+    });
+
+
+    it('should resolve to the model with modified headers if the model is successfully deleted from the database', function (done) {        
+        var options = {
+            'type': 'user',
+            'properties' : ['name', 'email']
+        };
+        var User = Model.extend(options);
+        var user = new User({'name': 'sam', 'email': 'sam@email.example'});
+        var firstRev;
+        var db = nano('http://127.0.0.1:5984/test');
+        user.save().then(function () {
+            firstRev = user._rev;
+            return user;
+        }).then(function (user) {
+            user.delete().then(function (user) {
+                assert.notStrictEqual(firstRev, user._rev);
+                db.get(user._id, function (error) {
+                    if (error) {
+                        assert.ok(error instanceof Error);
+                        assert.strictEqual(error.message, 'deleted');
+                        return done();
+                    }
+                    done(new Error('The document should be deleted from the database!'));
+                });
+            }).catch(done);
+        }).catch(done);        
     });
 });

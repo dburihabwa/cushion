@@ -51,7 +51,18 @@ module.exports = function (connectionURL) {
 			});
 		};
 
-		func.prototype.delete = function  () {};
+		func.prototype.delete = function () {
+			var obj = this;
+			return new q.Promise(function (resolve, reject) {
+				db.destroy(obj._id, obj._rev, function (error, headers) {
+					if (error) {
+						return reject(error);
+					}
+					obj._rev = headers.rev;
+					return resolve(obj);
+				});
+			});		
+		};
 		return func;
 	};
 
