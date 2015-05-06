@@ -4,7 +4,10 @@ A light promise based couchdb ORM built on top of nano and q.
 ## Creating your type
 ```javascript
 var sofa = require('sofa')('https://host:port/database');
-var Message = sofa.Model.extend(['author', 'content']);
+var Message = sofa.Model.extend({
+	'properties': ['author', 'content'],
+	'type': 'message'
+);
 
 var warning = new Message({
 	'author': 'sam',
