@@ -1,11 +1,19 @@
 # SOFA
-A light promise based couchdb ORM built on top of nano and q.
+A little couchdb helper with no other intention than avoiding rewriting everythin all the time.
 
 ## Creating your type
+
 ```javascript
 var sofa = require('sofa')('https://host:port/database');
 var Message = sofa.Model.extend({
-	'properties': ['author', 'content'],
+	'properties': {
+        'author': {
+            'view': false
+        }, 
+        'content': {
+            'view': false
+        }
+    },
 	'type': 'message'
 );
 

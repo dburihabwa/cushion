@@ -4,6 +4,7 @@ var path = require('path');
 var nano = require('nano');
 
 var index = require(path.join(__dirname, '../index.js'))('http://127.0.0.1:5984/test');
+var Collection = index.Collection;
 var Model = index.Model;
 
 describe('Model.extends(options)', function () {
@@ -11,11 +12,18 @@ describe('Model.extends(options)', function () {
 	it('should add the expected properties to the model', function () {
         var options = {
             'type': 'user',
-            'properties' : ['name', 'email']
+            'properties' : {
+                'name': {
+                    'view': false,
+                },
+                'email': {
+                    'view': false
+                }
+            }
         };
 		var User = Model.extend(options);
 		var sam = new User({});
-        options.properties.forEach(function (property) {
+        Object.keys(options.properties).forEach(function (property) {
             assert.ok(sam.hasOwnProperty(property));
         });
 	});
@@ -23,7 +31,14 @@ describe('Model.extends(options)', function () {
     it('should produce a constructor that accepts properties named according to the options that created it', function () {
         var options = {
             'type': 'user',
-            'properties' : ['name', 'email']
+            'properties' : {
+                'name': {
+                    'view': false,
+                },
+                'email': {
+                    'view': false
+                }
+            }
         };
         var User = Model.extend(options);
         var sam = new User({'uninvited': true});
@@ -33,7 +48,14 @@ describe('Model.extends(options)', function () {
     it('should produce a constructor that does not allow non waranted properties to appear in the objects it creates', function () {
         var options = {
             'type': 'user',
-            'properties' : ['name', 'email']
+            'properties' : {
+                'name': {
+                    'view': false,
+                },
+                'email': {
+                    'view': false
+                }
+            }
         };
         var userProperties = {'name': 'sam', 'email': 'sam@email.example'};
         var User = Model.extend(options);
@@ -65,7 +87,14 @@ describe('Model.extends(options)', function () {
 
     it('should throw an error if the type is missing from the options argument', function () {
         var options = {
-            'properties' : ['name', 'email']
+            'properties' : {
+                'name': {
+                    'view': false,
+                },
+                'email': {
+                    'view': false
+                }
+            }
         };
         assert.throws(function () {
             Model.extend(options);
@@ -89,7 +118,14 @@ describe('extendedModel.save()', function () {
     it('should resolve to an object equal to extendModel', function (done) {
         var options = {
             'type': 'user',
-            'properties' : ['name', 'email']
+            'properties' : {
+                'name': {
+                    'view': false,
+                },
+                'email': {
+                    'view': false
+                }
+            }
         };
         var User = Model.extend(options);
         var user = new User({'name': 'sam', 'email': 'sam@email.example'});
@@ -103,7 +139,14 @@ describe('extendedModel.save()', function () {
     it('should resolve to an object with defined _id and _rev fields for a first time save', function (done) {
         var options = {
             'type': 'user',
-            'properties' : ['name', 'email']
+            'properties' : {
+                'name': {
+                    'view': false,
+                },
+                'email': {
+                    'view': false
+                }
+            }
         };
         var User = Model.extend(options);
         var user = new User({'name': 'sam', 'email': 'sam@email.example'});
@@ -119,7 +162,14 @@ describe('extendedModel.save()', function () {
     it('should resolve to an object with a modified _rev field for an extendedModel saved earlier', function (done) {
         var options = {
             'type': 'user',
-            'properties' : ['name', 'email']
+            'properties' : {
+                'name': {
+                    'view': false,
+                },
+                'email': {
+                    'view': false
+                }
+            }
         };
         var User = Model.extend(options);
         var user = new User({'name': 'sam', 'email': 'sam@email.example'});
@@ -138,7 +188,14 @@ describe('extendedModel.save()', function () {
     it('should reject an error if extendedModel._rev does not match extendedModel in the database', function (done) {
         var options = {
             'type': 'user',
-            'properties' : ['name', 'email']
+            'properties' : {
+                'name': {
+                    'view': false,
+                },
+                'email': {
+                    'view': false
+                }
+            }
         };
         var User = Model.extend(options);
         var user = new User({'name': 'sam', 'email': 'sam@email.example'});
@@ -161,7 +218,14 @@ describe('model.delete()', function() {
     it('should reject an error if the model does not exist in the database', function (done) {        
         var options = {
             'type': 'user',
-            'properties' : ['name', 'email']
+            'properties' : {
+                'name': {
+                    'view': false,
+                },
+                'email': {
+                    'view': false
+                }
+            }
         };
         var User = Model.extend(options);
         var user = new User({'name': 'sam', 'email': 'sam@email.example'});
@@ -178,7 +242,14 @@ describe('model.delete()', function() {
     it('should resolve to the model with modified headers if the model is successfully deleted from the database', function (done) {        
         var options = {
             'type': 'user',
-            'properties' : ['name', 'email']
+            'properties' : {
+                'name': {
+                    'view': false,
+                },
+                'email': {
+                    'view': false
+                }
+            }
         };
         var User = Model.extend(options);
         var user = new User({'name': 'sam', 'email': 'sam@email.example'});
@@ -200,5 +271,54 @@ describe('model.delete()', function() {
                 });
             }).catch(done);
         }).catch(done);        
+    });
+});
+
+describe('Collection.extend(extendedModel)', function () {
+    'use strict';
+    it('should throw an error if the extendModel is undefined', function () {
+        assert.throws(function () {
+            Collection.extend(undefined);
+        }, 'conf argument must be defined');
+    });
+
+    it('should throw an error if the extendModel is null', function () {
+        assert.throws(function () {
+            Collection.extend(null);
+        }, 'conf argument must be defined');
+    });
+
+    it('should return a function object with methods matching the model properties that have a view property set to true    ', function () {
+        var conf = {
+            'type': 'message',
+            'properties': {
+                'content': {
+                    'view': true
+                }, 
+                'recipient': {
+                    'view': true
+                },
+                'viewSetToFalse': {
+                    'view': false
+                }
+            }
+        };
+        var Messages = Collection.extend(conf);
+        assert.ok(typeof Messages === 'function');
+        var properties = Object.keys(conf.properties);
+        var queryableProperties = properties.filter(function (property) {
+            return conf.properties[property].view === true;
+        });
+        queryableProperties.forEach(function (property) {
+            var key = 'findBy' + property[0].toUpperCase() + property.substr(1);
+            assert.ok(typeof Messages[key] === 'function');
+        });
+        var notQueryableProperties = properties.filter(function (property) {
+            return conf.properties[property].view !== true;  
+        });
+        notQueryableProperties.forEach(function (property) {
+            var key = 'findBy' + property[0].toUpperCase() + property.substr(1);
+            assert.ok(typeof Messages[key] === 'undefined');
+        });
     });
 });

@@ -15,13 +15,15 @@ module.exports = function (connectionURL) {
 			throw new Error('options.type must be defined');
 		}
 
-		if (!(Array.isArray(options.properties))) {
-			throw new Error('options.type must be an array');
+		if (typeof options.properties !== 'object' || options.properties === null) {
+			throw new Error('options.properties must be an array');
 		}
 		var func = function (params) {
 			this.type = options.type;
-			for (var i = 0; i < options.properties.length; i++) {
-				var key = options.properties[i];
+			var properties = Object.keys(options.properties);
+
+			for (var i = 0; i < properties.length; i++) {
+				var key = properties[i];
 				this[key] = undefined;
 			}
 			for (var p in params) {
@@ -66,7 +68,44 @@ module.exports = function (connectionURL) {
 		return func;
 	};
 
+	var Collection = function () {};
+
+
+	var buildViewQuery = function (type, key) {
+		return function (params) {
+			return new q.Promise(function (resolve, reject) {
+				params = params || {};
+				db.view(type, key, params, function (error, body) {
+					if (error) {
+						return reject(error);
+					}
+					var values = body.rows.map(function (row) {
+						return row;
+					});
+					return resolve(values);
+				});
+			});
+		};
+	};
+
+	Collection.extend = function (conf) {
+		if (!conf || typeof conf !== 'object') {
+			throw new Error('conf argument must be defined');
+		}
+		var func = function () {};
+		var properties = Object.keys(conf.properties);
+		for (var i = 0; i < properties.length; i++) {
+			var property = properties[i];
+			if (conf.properties[property].view === true) {
+				var key = 'findBy' + property[0].toUpperCase() + property.substr(1);
+				func[key] = buildViewQuery(conf.type, key);
+			}
+		}
+		return func;
+	};
+
 	return {
+		'Collection': Collection,
 		'Model': Model
 	};
 };
