@@ -288,7 +288,7 @@ describe('Collection.extend(extendedModel)', function () {
         }, 'conf argument must be defined');
     });
 
-    it('should return a function object with methods matching the model properties that have a view property set to true    ', function () {
+    it('should return an object with methods matching the model properties that have a view property set to true    ', function () {
         var conf = {
             'type': 'message',
             'properties': {
@@ -320,5 +320,109 @@ describe('Collection.extend(extendedModel)', function () {
             var key = 'findBy' + property[0].toUpperCase() + property.substr(1);
             assert.ok(typeof Messages[key] === 'undefined');
         });
+    });
+
+    it('should return an object with a get method to retrieve a document using its id', function (done) {
+        var conf = {
+            'type': 'book',
+            'properties': {
+                'author': {
+                    'view': true
+                },
+                'title': {
+                    'view': true
+                },
+                'year': {
+                    'view': true
+                }
+            }
+        };
+        var Book = Model.extend(conf);
+        var Books = Collection.extend(conf);
+
+        var book = new Book({
+            'author': 'Oscar Wilde',
+            'title': 'The portrait of Dorian Gray',
+            'year': 3210
+        });
+
+        book.save().then(function () {
+            Books.get(book._id).then(function (bookFromDatabase) {
+                assert.deepEqual(book, bookFromDatabase);
+                done();
+            });
+        }).catch(done);
+    });
+
+    it('should return an object with a get method that rejects an error if the id is undefined', function (done) {
+        var conf = {
+            'type': 'book',
+            'properties': {
+                'author': {
+                    'view': true
+                },
+                'title': {
+                    'view': true
+                },
+                'year': {
+                    'view': true
+                }
+            }
+        };
+        var Books = Collection.extend(conf);
+        Books.get(undefined).then(function () {
+            assert.fail('An error should have been rejected!');
+        }, function (error) {
+            assert.ok(error instanceof Error);
+            assert.strictEqual(error.message, 'id argument must be defined');
+        }).done(done);
+    });
+
+    it('should return an object with a get method that rejects an error if the id is null', function (done) {
+        var conf = {
+            'type': 'book',
+            'properties': {
+                'author': {
+                    'view': true
+                },
+                'title': {
+                    'view': true
+                },
+                'year': {
+                    'view': true
+                }
+            }
+        };
+        var Books = Collection.extend(conf);
+        Books.get(null).then(function () {
+            assert.fail('An error should have been rejected!');
+        }, function (error) {
+            assert.ok(error instanceof Error);
+            assert.strictEqual(error.message, 'id argument must be defined');
+        }).done(done);
+    });
+
+    it('should return an object with a get method that rejects an error if the id does not match any document in the database', function (done) {
+        var conf = {
+            'type': 'book',
+            'properties': {
+                'author': {
+                    'view': true
+                },
+                'title': {
+                    'view': true
+                },
+                'year': {
+                    'view': true
+                }
+            }
+        };
+        var Books = Collection.extend(conf);
+        Books.get('bad_id_xxxx').then(function () {
+            assert.fail('An error should have been rejected!');
+        }, function (error) {
+            assert.ok(error instanceof Error);
+            assert.strictEqual(error.message, 'missing');
+        }).done(done);
     });
 });

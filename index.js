@@ -101,6 +101,22 @@ module.exports = function (connectionURL) {
 				func[key] = buildViewQuery(conf.type, key);
 			}
 		}
+
+		var ExtendedModel = Model.extend(conf);
+
+		func.get = function (id) {
+			return new q.Promise(function (resolve, reject) {
+				if (id === undefined || id === null) {
+					return reject(new Error('id argument must be defined'));
+				}
+				db.get(id, function (error, doc) {
+					if (error) {
+						return reject(error);
+					}
+					return resolve(new ExtendedModel(doc));
+				});
+			});
+		};
 		return func;
 	};
 
