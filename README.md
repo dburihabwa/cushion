@@ -1,11 +1,11 @@
-# SOFA
+# cushion
 A light opinionated document oriented abstraction layer for couchdb built on top of nano and q.
 
 ## Creating the  object
 In order to create your own type of objects, you should get a constructor using ```Model.extend```.
 ```javascript
-var sofa = require('sofa')('https://host:port/database');
-var Message = sofa.Model.extend({
+var cushion = require('cushion')('https://host:port/database');
+var Message = cushion.Model.extend({
 	'properties': {
         'author': {
             'view': false

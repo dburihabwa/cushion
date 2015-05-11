@@ -1,5 +1,5 @@
 {
-  "name": "sofa",
+  "name": "cushion",
   "version": "0.0.1",
   "description": "A light promise based couchdb ORM built on top of nano and q.",
   "main": "index.js",
