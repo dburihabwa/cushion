@@ -1,14 +1,77 @@
 var assert = require('assert');
 require('blanket')();
 var path = require('path');
-var nano = require('nano');
+var q = require('q');
 
-var index = require(path.join(__dirname, '../index.js'))('http://127.0.0.1:5984/test');
+var config = require(path.join(__dirname, '../config.json'));
+var url = config.test.protocol + '://' + config.test.host + ':' + config.test.port + '/';
+
+console.log('url: ' + url);
+
+var index = require(path.join(__dirname, '../index.js'))(url + config.test.database);
 var Collection = index.Collection;
 var Model = index.Model;
+var nano;
 
-describe('Model.extends(options)', function () {
+function databaseExists(database) {
     'use strict';
+    return new q.Promise(function (resolve, reject) {
+        nano.db.get(database, function (error, body) {
+           if (error) {
+               return reject(error);
+           }
+           return resolve(body);
+        });
+    });
+}
+
+function createDatabase(database) {
+    'use strict';
+    return new q.Promise(function (resolve, reject) {
+        nano.db.create(database, function (error, body) {
+            if (error) {
+                return reject(error);
+            }
+            return resolve(body);
+        });
+    });
+}
+
+function destroyDatabase(database) {
+    'use strict';
+    return new q.Promise(function (resolve, reject) {
+        nano.db.destroy(database, function (error, body) {
+            if (error) {
+                return reject(error);
+            }
+            return resolve(body);
+        });
+    });
+}
+
+before(function (done) {
+    'use strict';
+    var authorizedUrl = config.test.protocol + '://' + config.test.username + ':' + config.test.password + '@' + config.test.host + ':' + config.test.port + '/';
+    nano = require('nano')(authorizedUrl);
+    databaseExists(config.test.database).then(function() {
+        done();
+    }, function () {
+        createDatabase(config.test.database).then(function () {
+            done();
+        }).catch(done);
+    }).catch(done);
+});
+
+after(function (done) {
+    'use strict';
+    destroyDatabase(config.test.database).then(function () {
+        done();
+    }).catch(done);
+});
+
+describe('Model.extend(options)', function () {
+    'use strict';
+
 	it('should add the expected properties to the model', function () {
         var options = {
             'type': 'user',
@@ -215,6 +278,7 @@ describe('extendedModel.save()', function () {
 
 describe('model.delete()', function() {
     'use strict';
+
     it('should reject an error if the model does not exist in the database', function (done) {        
         var options = {
             'type': 'user',
@@ -254,7 +318,7 @@ describe('model.delete()', function() {
         var User = Model.extend(options);
         var user = new User({'name': 'sam', 'email': 'sam@email.example'});
         var firstRev;
-        var db = nano('http://127.0.0.1:5984/test');
+        var db = nano.use(config.test.database);
         user.save().then(function () {
             firstRev = user._rev;
             return user;
@@ -274,8 +338,9 @@ describe('model.delete()', function() {
     });
 });
 
-describe('Collection.extend(extendedModel)', function () {
+describe('Collection.extend(options)', function () {
     'use strict';
+
     it('should throw an error if the extendModel is undefined', function () {
         assert.throws(function () {
             Collection.extend(undefined);
